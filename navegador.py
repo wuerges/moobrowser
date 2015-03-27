@@ -2,6 +2,8 @@ import shutil
 from BeautifulSoup import BeautifulSoup
 import os
 
+import model
+
 import webserver
 
 class MoodleBrowser:
@@ -24,13 +26,51 @@ class MoodleBrowser:
         else:
             raise "Not in login page"
 
-    def navega_tarefas(self, y, d, a):
+    def navega_disciplina(self, y, d):
         if self.location != "home":
             raise "Not in home page"
 
+        req = self.br.click_link(text_regex=r'%s.*%s.*' % (d, y))
 
-        req = self.br.click_link(text_regex=r'%s.*' % d)
+
         self.br.open(req)
+        self.location = d
+
+    def navega_participantes(self, d):
+        if self.location != d:
+            raise "Not in %s" % d
+
+        req = self.br.click_link(text_regex=r'^Participantes$')
+        self.br.open(req)
+        self.location = d + "participantes"
+
+    def participantes(self, y, d):
+        self.navega_disciplina(y, d)
+        self.navega_participantes(d)
+
+
+
+        for l in self.br.links(text_regex=r'^Mostrar todos os \d+$'):
+            req = self.br.click_link(text_regex=r'^Mostrar todos os \d+$')
+            self.br.open(req)
+
+        soup = BeautifulSoup(self.br.response().read())
+        table = soup.find("table", id='participants')
+
+        #print table.prettify()
+
+        alunos = []
+
+        for row in table.findAll('tr')[1:]:
+            col = row.findAll('td')
+            aluno = model.Participante(col[1].findAll('a')[0].text)
+            alunos.append(aluno)
+        return alunos
+
+
+    def navega_atividates(self, d, a):
+        if self.location != d:
+            raise "Not in %s" % d
 
         req = self.br.click_link(text_regex=r'%s.*' % a)
         self.br.open(req)
@@ -38,6 +78,15 @@ class MoodleBrowser:
         req = self.br.click_link(text_regex=r'Ver .* tarefas enviadas')
         self.br.open(req)
 
+        self.location = a
+
+
+    def navega_tarefas(self, y, d, a):
+        if self.location != "home":
+            raise "Not in home page"
+
+        self.navega_disciplina(y, d)
+        self.navega_atividades(d, a)
 
     def download_activities(self, y, d, a):
         self.navega_tarefas(y, d, a);
@@ -66,8 +115,8 @@ class MoodleBrowser:
 
         print "Download completed"
 
-    def participantes(self, y, d, a):
-        self.navega_tarefas(y, d, a);
+    def old_participantes(self, y, d, a):
+        self.navega_tarefas(d, a);
 
         semester_folder = y + '/'
         disc_folder = d + '/'

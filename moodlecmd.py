@@ -4,9 +4,12 @@ import navegador
 from optparse import OptionParser
 
 parser = OptionParser()
+parser.add_option("-g", "--grades", default=False)
+parser.add_option("-d", "--download", default=True)
+
 parser.add_option("-l", "--login")
 parser.add_option("-p", "--password")
-parser.add_option("-s", "--semester", default="2015-1")
+parser.add_option("-s", "--semester", default="2015/1")
 parser.add_option("-c", "--course")
 parser.add_option("-a", "--activity")
 
@@ -17,9 +20,17 @@ m.initialize()
 
 m.login(options.login, options.password)
 
-m.download_activities(options.semester, options.course, options.activity)
+if options.grades:
+    ps = m.participantes(options.semester, options.course)
 
-#m.participantes('2015-1', 'GEX002', 'ATT001')
+    nomes = [a.nome for a in  [p for p in ps if not p.e_professor()]]
+    for n in sorted(nomes):
+        print n
+
+
+elif options.download:
+    m.download_activities(options.semester, options.course, options.activity)
+
 
 
 
