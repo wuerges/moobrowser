@@ -6,6 +6,36 @@ import model
 
 import webserver
 
+class ProfessorBrowser:
+    def __init__(self):
+        self.br = webserver.br
+
+        self.location = None
+
+    def initialize(self):
+        self.br.open("http://professor.uffs.edu.br")
+
+
+    def login(self, user, passw):
+        self.br.select_form(nr=0)
+        print
+        self.br.form['j_username']=user
+        self.br.form['j_password']=passw
+        self.br.submit()
+
+        self.br.open("https://professor.uffs.edu.br/restrito/graduacao/diario-classe/registrar-faltas.xhtml")
+        self.br.select_form(nr=0)
+        self.br.select_form(nr=1)
+        self.br.select_form(nr=2)
+
+        for f in self.br.forms():
+            print f
+        #req = self.br.click_link(text_regex=r'^Registrar Encontros e Faltas$')
+        #self.br.open(req)
+
+        soup = BeautifulSoup(self.br.response().read())
+        print(soup.prettify())
+
 class MoodleBrowser:
     def __init__(self):
         self.br = webserver.br
